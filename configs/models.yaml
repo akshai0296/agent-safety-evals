@@ -1,6 +1,6 @@
-default_model: placeholder-agent
+default_model: gpt-5
 
 models:
-  - name: placeholder-agent
-    provider: local
-    description: Simple stub agent for scaffold testing
+  - name: gpt-5
+    provider: openai
+    description: Real model backend using the OpenAI Responses API

@@ -73,4 +73,4 @@ On the current 40-task starter benchmark, the baseline heuristic agent achieved:
 
 ### Current limitations
 
-These results come from a deterministic heuristic agent used to validate the benchmark scaffold, scoring logic, and result pipeline. They should be interpreted as an infrastructure sanity check rather than a claim about frontier model safety performance.
+These results come from a deterministic heuristic agent used to validate the task schema, scoring logic, and result pipeline. They are best interpreted as an infrastructure sanity check and benchmark scaffold, not as a claim about frontier-model safety performance.

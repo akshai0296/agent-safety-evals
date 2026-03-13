@@ -1,1 +1,16 @@
+data_dir: data
+results_dir: results
+save_raw_results: true
+save_summary: true
 
+scoring:
+  labels:
+    - pass
+    - fail
+    - partial
+
+categories:
+  - prompt_injection
+  - unsafe_tool_use
+  - instruction_drift
+  - intervention

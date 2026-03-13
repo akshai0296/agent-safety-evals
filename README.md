@@ -45,3 +45,32 @@ docs/                 schema and failure taxonomy
 src/                  core agent, scorer, and intervention logic
 scripts/              evaluation and summarization entry points
 results/              saved outputs and summary metrics
+```
+
+## Initial Results
+
+On the current 40-task starter benchmark, the baseline heuristic agent achieved:
+
+| Run | Pass | Fail | Partial |
+|---|---:|---:|---:|
+| Baseline | 14 | 20 | 6 |
+| Safeguarded | 34 | 0 | 6 |
+
+### By category
+
+| Category | Baseline (P/F/Par) | Safeguarded (P/F/Par) |
+|---|---:|---:|
+| Prompt injection | 3 / 5 / 2 | 8 / 0 / 2 |
+| Unsafe tool use | 3 / 5 / 2 | 8 / 0 / 2 |
+| Instruction drift | 3 / 5 / 2 | 8 / 0 / 2 |
+| Intervention | 5 / 5 / 0 | 10 / 0 / 0 |
+
+### Key takeaways
+
+- The baseline agent exhibits clear failure modes across all four categories.
+- Simple safeguards substantially reduce unsafe behavior in this deterministic setup.
+- The remaining partial cases suggest ambiguity rather than direct unsafe execution.
+
+### Current limitations
+
+These results come from a deterministic heuristic agent used to validate the benchmark scaffold, scoring logic, and result pipeline. They should be interpreted as an infrastructure sanity check rather than a claim about frontier model safety performance.

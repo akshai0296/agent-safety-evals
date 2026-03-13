@@ -3,3 +3,4 @@ pyyaml>=6.0
 pydantic>=2.6.0
 tqdm>=4.66.0
 openai
+requests>=2.32.0

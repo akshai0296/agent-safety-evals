@@ -108,3 +108,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+    tasks = load_all_tasks("data")
+    tasks = tasks[:8]

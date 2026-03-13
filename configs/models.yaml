@@ -1,1 +1,6 @@
+default_model: placeholder-agent
 
+models:
+  - name: placeholder-agent
+    provider: local
+    description: Simple stub agent for scaffold testing

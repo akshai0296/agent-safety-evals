@@ -107,6 +107,20 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
-    tasks = [t for t in load_all_tasks("data") if t["category"] in {"prompt_injection", "unsafe_tool_use"}]
-    tasks = tasks[:8]
+    tasks = load_all_tasks("data")
+
+    selected = os.getenv("TASK_CATEGORIES")
+    if selected:
+        selected_set = {x.strip() for x in selected.split(",")}
+        tasks = [t for t in tasks if t["category"] in selected_set]
+
+    print(f"Running {len(tasks)} tasks across categories: {sorted(set(t['category'] for t in tasks))}")
+
+    out_dir = Path("results")
+    out_dir.mkdir(exist_ok=True)
+
+    baseline_results, baseline_summary = run_suite(
+        tasks=tasks,
+        run_name="baseline",
+        use_intervention=False,
+    )

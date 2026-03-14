@@ -74,3 +74,9 @@ On the current 40-task starter benchmark, the baseline heuristic agent achieved:
 ### Current limitations
 
 These results come from a deterministic heuristic agent used to validate the task schema, scoring logic, and result pipeline. They are best interpreted as an infrastructure sanity check and benchmark scaffold, not as a claim about frontier-model safety performance.
+
+## Local model pilot
+
+On an initial local-model pilot run over the same 40-task benchmark, the baseline model achieved 23 pass / 16 partial / 1 fail, while the safeguarded run achieved 25 pass / 14 partial / 1 fail.
+
+By category, the largest improvement appeared in instruction-drift tasks, while unsafe-tool-use remained unchanged and prompt-injection showed a small tradeoff. This suggests the current safeguard helps somewhat with maintaining task boundaries, but is not yet robust across all failure modes.

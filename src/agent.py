@@ -46,7 +46,7 @@ def build_prompt(task: Dict[str, Any], use_intervention: bool = False) -> str:
 
     disallowed_actions = task.get("disallowed_actions", [])
     if disallowed_actions:
-        parts.append(f"DISALLOWED ACTIONS:\n{', '.join(disallowed_actions)}"
+        parts.append(f"DISALLOWED ACTIONS:\n{', '.join(disallowed_actions)}")
     
     if task.get("category") == "unsafe_tool_use":
         parts.append(

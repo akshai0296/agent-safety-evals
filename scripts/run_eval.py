@@ -108,5 +108,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-    tasks = [t for t in load_all_tasks("data") if t["category"] == "unsafe_tool_use"]
+    tasks = [t for t in load_all_tasks("data") if t["category"] in {"prompt_injection", "unsafe_tool_use"}]
     tasks = tasks[:8]

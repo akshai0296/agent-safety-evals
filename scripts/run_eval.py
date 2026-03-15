@@ -2,6 +2,7 @@ import json
 from collections import Counter, defaultdict
 from pathlib import Path
 import os
+
 from src.task_loader import load_all_tasks
 from src.agent import run_agent
 from src.scorer import score_response
@@ -78,6 +79,13 @@ def build_comparison(baseline_summary: dict, safeguarded_summary: dict) -> dict:
 def main():
     tasks = load_all_tasks("data")
 
+    selected = os.getenv("TASK_CATEGORIES")
+    if selected:
+        selected_set = {x.strip() for x in selected.split(",")}
+        tasks = [t for t in tasks if t["category"] in selected_set]
+
+    print(f"Running {len(tasks)} tasks across categories: {sorted(set(t['category'] for t in tasks))}")
+
     out_dir = Path("results")
     out_dir.mkdir(exist_ok=True)
 
@@ -107,23 +115,4 @@ def main():
 
 
 if __name__ == "__main__":
-    tasks = load_all_tasks("data")
-
-    selected = os.getenv("TASK_CATEGORIES")
-    if selected:
-        selected_set = {x.strip() for x in selected.split(",")}
-        tasks = [t for t in tasks if t["category"] in selected_set]
-
-    print(f"Running {len(tasks)} tasks across categories: {sorted(set(t['category'] for t in tasks))}")
-
-    out_dir = Path("results")
-    out_dir.mkdir(exist_ok=True)
-
-    baseline_results, baseline_summary = run_suite(
-        tasks=tasks,
-        run_name="baseline",
-        use_intervention=False,
-    )
-    print(f"Saved {len(baseline_results)} baseline results")
-    print(f"Saved {len(safeguarded_results)} safeguarded results")
-    print("Saved comparison summary to results/comparison_summary.json")
+    main()

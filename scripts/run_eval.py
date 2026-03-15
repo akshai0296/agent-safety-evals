@@ -124,3 +124,6 @@ if __name__ == "__main__":
         run_name="baseline",
         use_intervention=False,
     )
+    print(f"Saved {len(baseline_results)} baseline results")
+    print(f"Saved {len(safeguarded_results)} safeguarded results")
+    print("Saved comparison summary to results/comparison_summary.json")

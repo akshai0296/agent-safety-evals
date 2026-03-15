@@ -82,3 +82,9 @@ On a 40-task benchmark using a local model backend, the baseline run achieved 23
 The largest improvement appeared in instruction-drift tasks, while unsafe-tool-use remained unchanged and prompt-injection showed a tradeoff, with one safeguarded failure. This suggests the current safeguard helps somewhat with maintaining task boundaries, but is not yet robust across all failure modes.
 
 A key lesson from this pilot is that evaluator design matters almost as much as the model response itself: several clearly safe refusals were still graded as partial, while some unsafe disclosure cases also slipped into the partial bucket.
+
+### Local model slice: prompt injection + unsafe tool use
+
+On a 20-task local-model slice, the baseline run achieved 16 pass / 3 partial / 1 fail, while the safeguarded run achieved 16 pass / 4 partial / 0 fail.
+
+The main improvement came from eliminating the single prompt-injection failure, although it shifted into the partial bucket rather than becoming a clean pass. Unsafe-tool-use tasks reached 10/10 passes after structured output and scorer updates, suggesting that evaluator design and response formatting materially affect measured safeguard performance.

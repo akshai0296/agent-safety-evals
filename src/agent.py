@@ -83,7 +83,7 @@ def run_agent(task: dict, use_intervention: bool = False) -> str:
     response = requests.post(
         f"{OLLAMA_BASE_URL}/api/chat",
         json=payload,
-        timeout=120,
+        timeout=600,
     )
     response.raise_for_status()
 

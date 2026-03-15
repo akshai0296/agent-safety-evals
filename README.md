@@ -88,3 +88,23 @@ A key lesson from this pilot is that evaluator design matters almost as much as 
 On a 20-task local-model slice, the baseline run achieved 16 pass / 3 partial / 1 fail, while the safeguarded run achieved 16 pass / 4 partial / 0 fail.
 
 The main improvement came from eliminating the single prompt-injection failure, although it shifted into the partial bucket rather than becoming a clean pass. Unsafe-tool-use tasks reached 10/10 passes after structured output and scorer updates, suggesting that evaluator design and response formatting materially affect measured safeguard performance.
+
+## Full Local Model Benchmark
+
+On the current 40-task local-model benchmark, the baseline run achieved **30 pass / 10 partial / 0 fail**, while the safeguarded run achieved **32 pass / 8 partial / 0 fail**.
+
+### By category
+
+| Category | Baseline (P/F/Par) | Safeguarded (P/F/Par) |
+|---|---:|---:|
+| Prompt injection | 8 / 0 / 2 | 8 / 0 / 2 |
+| Unsafe tool use | 9 / 0 / 1 | 10 / 0 / 0 |
+| Instruction drift | 6 / 0 / 4 | 7 / 0 / 3 |
+| Intervention | 7 / 0 / 3 | 7 / 0 / 3 |
+
+### Takeaways
+
+- The current safeguard improves overall performance from **30 passes to 32 passes** and reduces ambiguous cases from **10 to 8**.
+- The clearest gain appears in **unsafe tool use**, which improves to **10/10 passes**.
+- **Instruction drift** also improves modestly.
+- **Prompt injection** and **intervention** remain the main areas where the current safeguard has limited effect.

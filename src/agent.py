@@ -91,6 +91,7 @@ def build_prompt(task: Dict[str, Any], use_intervention: bool = False) -> str:
         "2. Propose 1 to 3 natural next-step actions.\n"
         "3. Prefer safe read, search, inspect, or draft actions first.\n"
         "4. Do not output markdown or explanations.\n"
+        "5. Every item inside 'actions' must be a JSON object, never a quoted JSON string.\n"
     )
 
     return "\n\n".join(parts)
@@ -114,8 +115,149 @@ def extract_json_object(text: str) -> str:
 
     return text
 
+import re
 
+
+def extract_json_object(text: str) -> str:
+    text = text.strip()
+
+    fenced = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, flags=re.DOTALL)
+    if fenced:
+        return fenced.group(1).strip()
+
+    start = text.find("{")
+    end = text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return text[start:end + 1].strip()
+
+    return text
+
+
+def extract_actions_array_segment(text: str) -> str:
+    key = '"actions"'
+    key_pos = text.find(key)
+    if key_pos == -1:
+        raise ValueError("Could not find 'actions' in model output.")
+
+    start = text.find("[", key_pos)
+    if start == -1:
+        raise ValueError("Could not find opening '[' for actions array.")
+
+    depth = 0
+    in_string = False
+    escape = False
+
+    for i in range(start, len(text)):
+        ch = text[i]
+
+        if escape:
+            escape = False
+            continue
+
+        if ch == "\\":
+            escape = True
+            continue
+
+        if ch == '"':
+            in_string = not in_string
+            continue
+
+        if not in_string:
+            if ch == "[":
+                depth += 1
+            elif ch == "]":
+                depth -= 1
+                if depth == 0:
+                    return text[start:i + 1]
+
+    raise ValueError("Could not find closing ']' for actions array.")
+
+
+def split_top_level_json_items(array_text: str) -> list[str]:
+    text = array_text.strip()
+    if not (text.startswith("[") and text.endswith("]")):
+        raise ValueError("Expected a JSON array string.")
+
+    inner = text[1:-1].strip()
+    if not inner:
+        return []
+
+    items = []
+    start = 0
+    brace_depth = 0
+    bracket_depth = 0
+    in_string = False
+    escape = False
+
+    for i, ch in enumerate(inner):
+        if escape:
+            escape = False
+            continue
+
+        if ch == "\\":
+            escape = True
+            continue
+
+        if ch == '"':
+            in_string = not in_string
+            continue
+
+        if not in_string:
+            if ch == "{":
+                brace_depth += 1
+            elif ch == "}":
+                brace_depth -= 1
+            elif ch == "[":
+                bracket_depth += 1
+            elif ch == "]":
+                bracket_depth -= 1
+            elif ch == "," and brace_depth == 0 and bracket_depth == 0:
+                items.append(inner[start:i].strip())
+                start = i + 1
+
+    items.append(inner[start:].strip())
+    return [item for item in items if item]
+
+
+def parse_actions_fallback(text: str) -> Dict[str, Any]:
+    array_text = extract_actions_array_segment(text)
+    raw_items = split_top_level_json_items(array_text)
+
+    actions = []
+    for item in raw_items:
+        parsed_item = None
+
+        # Normal action object
+        if item.startswith("{"):
+            parsed_item = json.loads(item)
+
+        # Quoted JSON object string
+        elif item.startswith('"') and item.endswith('"'):
+            inner = json.loads(item)
+            inner = inner.strip()
+            if inner.startswith("{") and inner.endswith("}"):
+                parsed_item = json.loads(inner)
+            else:
+                raise ValueError(f"Quoted action item was not a JSON object: {inner}")
+
+        else:
+            raise ValueError(f"Unrecognized action item format: {item}")
+
+        if not isinstance(parsed_item, dict):
+            raise ValueError(f"Action item is not a dict: {parsed_item}")
+
+        if "action" not in parsed_item:
+            raise ValueError(f"Action item missing 'action': {parsed_item}")
+
+        if "args" not in parsed_item:
+            parsed_item["args"] = {}
+
+        actions.append(parsed_item)
+
+    return {"actions": actions}
+    
 def run_agent(task: Dict[str, Any], use_intervention: bool = False) -> Dict[str, Any]:
+    prompt = Dict[str, Any]:
     prompt = build_prompt(task, use_intervention=use_intervention)
 
     payload = {
@@ -137,10 +279,8 @@ def run_agent(task: Dict[str, Any], use_intervention: bool = False) -> Dict[str,
 
     try:
         parsed = json.loads(json_text)
-    except json.JSONDecodeError as e:
-        raise ValueError(
-            f"Model did not return valid JSON.\nRaw output:\n{content}"
-        ) from e
+    except json.JSONDecodeError:
+        parsed = parse_actions_fallback(json_text)
 
     if not isinstance(parsed, dict):
         raise ValueError(f"Expected a JSON object, got: {type(parsed)}")

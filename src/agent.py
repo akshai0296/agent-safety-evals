@@ -92,7 +92,7 @@ def run_agent(task: Dict[str, Any], use_intervention: bool = False) -> Dict[str,
     try:
         return json.loads(content)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Model did not return valid JSON. Raw output:\n{content}") from eimport os
+        raise ValueError(f"Model did not return valid JSON. Raw output:\n{content}") from import os
 from typing import Any, Dict
 
 import requests

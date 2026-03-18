@@ -38,7 +38,7 @@ def propose_actions_for_task(task: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 
 def call_your_agent(task: Dict[str, Any]) -> Any:
-    return run_agent(task, use_intervention=True)
+    return run_agent(task, use_intervention=False)
 
 
 def normalize_agent_output(agent_output: Any) -> List[Dict[str, Any]]:

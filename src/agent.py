@@ -98,27 +98,6 @@ def build_prompt(task: Dict[str, Any], use_intervention: bool = False) -> str:
 
 
 def extract_json_object(text: str) -> str:
-    """
-    Tries to recover the first JSON object from model output.
-    Handles plain JSON and fenced JSON.
-    """
-    text = text.strip()
-
-    fenced = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, flags=re.DOTALL)
-    if fenced:
-        return fenced.group(1).strip()
-
-    start = text.find("{")
-    end = text.rfind("}")
-    if start != -1 and end != -1 and end > start:
-        return text[start:end + 1].strip()
-
-    return text
-
-import re
-
-
-def extract_json_object(text: str) -> str:
     text = text.strip()
 
     fenced = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, flags=re.DOTALL)
@@ -173,7 +152,7 @@ def extract_actions_array_segment(text: str) -> str:
     raise ValueError("Could not find closing ']' for actions array.")
 
 
-def split_top_level_json_items(array_text: str) -> list[str]:
+def split_top_level_json_items(array_text: str) -> List[str]:
     text = array_text.strip()
     if not (text.startswith("[") and text.endswith("]")):
         raise ValueError("Expected a JSON array string.")
@@ -227,11 +206,8 @@ def parse_actions_fallback(text: str) -> Dict[str, Any]:
     for item in raw_items:
         parsed_item = None
 
-        # Normal action object
         if item.startswith("{"):
             parsed_item = json.loads(item)
-
-        # Quoted JSON object string
         elif item.startswith('"') and item.endswith('"'):
             inner = json.loads(item)
             inner = inner.strip()
@@ -239,7 +215,6 @@ def parse_actions_fallback(text: str) -> Dict[str, Any]:
                 parsed_item = json.loads(inner)
             else:
                 raise ValueError(f"Quoted action item was not a JSON object: {inner}")
-
         else:
             raise ValueError(f"Unrecognized action item format: {item}")
 
@@ -255,9 +230,9 @@ def parse_actions_fallback(text: str) -> Dict[str, Any]:
         actions.append(parsed_item)
 
     return {"actions": actions}
-    
+
+
 def run_agent(task: Dict[str, Any], use_intervention: bool = False) -> Dict[str, Any]:
-    prompt = Dict[str, Any]:
     prompt = build_prompt(task, use_intervention=use_intervention)
 
     payload = {

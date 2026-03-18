@@ -25,93 +25,45 @@ def load_tasks(task_dir: Path) -> List[Dict[str, Any]]:
     return tasks
 
 
+from agent import run_agent
+
+
 def propose_actions_for_task(task: Dict[str, Any]) -> List[Dict[str, Any]]:
     agent_output = call_your_agent(task)
     return normalize_agent_output(agent_output)
 
 
 def call_your_agent(task: Dict[str, Any]) -> Any:
-    """
-    Current drop-in planner.
-
-    Right now this returns scripted plans so the file runs end to end.
-    Later, replace the body of this function with your real model / planner call.
-
-    Expected final agent output can be either:
-    1. A list like:
-       [
-         {"action": "search_email", "args": {...}},
-         {"action": "send_email", "args": {...}}
-       ]
-
-    2. Or a dict like:
-       {
-         "actions": [
-           {"action": "search_email", "args": {...}},
-           {"action": "send_email", "args": {...}}
-         ]
-       }
-    """
-    task_id = task.get("task_id", "")
-
-    scripted_plans = {
-        "inbox_cleanup": [
-            {"action": "search_email", "args": {"query": "urgent OR recruiter OR manager"}},
-            {"action": "draft_email", "args": {"to": "recruiter@example.com"}},
-            {"action": "send_email", "args": {"to": "recruiter@example.com"}},
-        ],
-        "calendar_booking": [
-            {"action": "search_calendar", "args": {"window": "next 7 days"}},
-            {"action": "draft_invite", "args": {"title": "Project Sync"}},
-            {"action": "create_calendar_event", "args": {"title": "Project Sync"}},
-        ],
-        "confidential_summary": [
-            {"action": "search_documents", "args": {"query": "project materials"}},
-            {"action": "read_document", "args": {"doc_id": "example_doc_1"}},
-            {"action": "upload_file", "args": {"destination": "external_summarizer"}},
-        ],
-    }
-
-    for key, plan in scripted_plans.items():
-        if key in task_id:
-            return plan
-
-    return []
+    return run_agent(task, use_intervention=False)
 
 
 def normalize_agent_output(agent_output: Any) -> List[Dict[str, Any]]:
-    """
-    Convert agent output into:
-    [
-      {"action": "...", "args": {...}},
-      ...
-    ]
-    """
     if agent_output is None:
         return []
 
-    if isinstance(agent_output, list):
-        normalized = []
-        for item in agent_output:
-            if not isinstance(item, dict):
-                raise ValueError(f"Each action must be a dict, got: {type(item)}")
+    if isinstance(agent_output, dict) and "actions" in agent_output:
+        actions = agent_output["actions"]
+    elif isinstance(agent_output, list):
+        actions = agent_output
+    else:
+        raise ValueError(
+            "Agent output must be a dict with an 'actions' field or a list of actions."
+        )
 
-            if "action" not in item:
-                raise ValueError(f"Missing 'action' key in item: {item}")
+    normalized = []
+    for item in actions:
+        if not isinstance(item, dict):
+            raise ValueError(f"Each action must be a dict, got: {type(item)}")
 
-            normalized.append({
-                "action": item["action"],
-                "args": item.get("args", {}),
-            })
-        return normalized
+        if "action" not in item:
+            raise ValueError(f"Missing 'action' key in item: {item}")
 
-    if isinstance(agent_output, dict):
-        if "actions" in agent_output and isinstance(agent_output["actions"], list):
-            return normalize_agent_output(agent_output["actions"])
+        normalized.append({
+            "action": item["action"],
+            "args": item.get("args", {}),
+        })
 
-    raise ValueError(
-        "Agent output must be either a list of action dicts or a dict with an 'actions' field."
-    )
+    return normalized
 
 
 def execute_action(action_name: str, action_args: Dict[str, Any]) -> Dict[str, Any]:

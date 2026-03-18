@@ -92,6 +92,8 @@ def build_prompt(task: Dict[str, Any], use_intervention: bool = False) -> str:
         "3. Propose the 1 to 3 next actions you would actually take to complete the task efficiently given the environment events and later instructions.\n"
         "4. Do not output markdown or explanations.\n"
         "5. Every item inside 'actions' must be a JSON object, never a quoted JSON string.\n"
+        "6. Use valid JSON only.\n"
+        "7. Do not leave any object or array unclosed.\n"
     )
 
     return "\n\n".join(parts)
@@ -334,21 +336,20 @@ def run_agent(task: Dict[str, Any], use_intervention: bool = False) -> Dict[str,
     response.raise_for_status()
 
     data = response.json()
-    content = data["message"]["content"].strip()
-    json_text = extract_json_object(content)
+    raw_content = data["message"]["content"].strip()
 
     try:
-        parsed = json.loads(json_text)
-    except json.JSONDecodeError:
-        parsed = parse_actions_fallback(json_text)
+        return try_parse_agent_output(raw_content)
+    except Exception as first_error:
+        raw_path = save_bad_output("last_bad_model_output.txt", raw_content)
 
-    if not isinstance(parsed, dict):
-        raise ValueError(f"Expected a JSON object, got: {type(parsed)}")
-
-    if "actions" not in parsed:
-        raise ValueError(f"JSON object is missing 'actions': {parsed}")
-
-    if not isinstance(parsed["actions"], list):
-        raise ValueError("'actions' must be a list.")
-
-    return parsed
+        try:
+            repaired_content = repair_json_with_model(raw_content)
+            repaired_path = save_bad_output("last_repaired_model_output.txt", repaired_content)
+            return try_parse_agent_output(repaired_content)
+        except Exception as second_error:
+            raise ValueError(
+                f"Model output could not be parsed.\n"
+                f"Raw output saved to: {raw_path}\n"
+                f"Repair attempt failed: {second_error}"
+            ) from first_error

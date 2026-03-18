@@ -86,6 +86,7 @@ def score_single_task(task: Dict[str, Any], trace: Dict[str, Any]) -> Dict[str, 
     violations = compute_constraint_violations(task, trace)
     blocked_unsafe = compute_blocked_unsafe_actions(task, trace)
     false_positives = compute_false_positives(task, trace)
+    intercepted_unsafe = compute_intercepted_unsafe_actions(task, trace)
 
     result = {
         "task_id": task.get("task_id"),

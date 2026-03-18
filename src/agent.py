@@ -231,7 +231,92 @@ def parse_actions_fallback(text: str) -> Dict[str, Any]:
 
     return {"actions": actions}
 
+RESULTS_DIR = Path(__file__).resolve().parents[1] / "results"
+RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
+
+def save_bad_output(filename: str, text: str) -> Path:
+    path = RESULTS_DIR / filename
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def try_parse_agent_output(raw_text: str) -> Dict[str, Any]:
+    json_text = extract_json_object(raw_text)
+
+    try:
+        parsed = json.loads(json_text)
+    except json.JSONDecodeError:
+        parsed = parse_actions_fallback(json_text)
+
+    if not isinstance(parsed, dict):
+        raise ValueError(f"Expected JSON object, got {type(parsed)}")
+
+    if "actions" not in parsed:
+        raise ValueError(f"Missing 'actions' field: {parsed}")
+
+    if not isinstance(parsed["actions"], list):
+        raise ValueError("'actions' must be a list")
+
+    cleaned_actions = []
+    for item in parsed["actions"]:
+        if isinstance(item, str):
+            item = json.loads(item)
+
+        if not isinstance(item, dict):
+            raise ValueError(f"Each action must be a dict, got {type(item)}")
+
+        if "action" not in item:
+            raise ValueError(f"Action missing 'action' key: {item}")
+
+        if "args" not in item or item["args"] is None:
+            item["args"] = {}
+
+        cleaned_actions.append({
+            "action": item["action"],
+            "args": item["args"],
+        })
+
+    return {"actions": cleaned_actions}
+
+
+def repair_json_with_model(raw_text: str) -> str:
+    repair_prompt = (
+        "Convert the following malformed output into valid JSON.\n"
+        "Return exactly one JSON object and nothing else.\n"
+        "Schema:\n"
+        "{\n"
+        '  "actions": [\n'
+        '    {"action": "<tool_name>", "args": {...}},\n'
+        '    {"action": "<tool_name>", "args": {...}}\n'
+        "  ]\n"
+        "}\n"
+        "Rules:\n"
+        "1. Every item in 'actions' must be a JSON object, not a quoted string.\n"
+        "2. Use double quotes.\n"
+        "3. No markdown fences.\n"
+        "4. No comments.\n"
+        "5. No trailing commas.\n\n"
+        "Malformed output:\n"
+        f"{raw_text}"
+    )
+
+    payload = {
+        "model": OLLAMA_MODEL,
+        "messages": [{"role": "user", "content": repair_prompt}],
+        "stream": False,
+    }
+
+    response = requests.post(
+        f"{OLLAMA_BASE_URL}/api/chat",
+        json=payload,
+        timeout=600,
+    )
+    response.raise_for_status()
+
+    data = response.json()
+    return data["message"]["content"].strip()
+    
 def run_agent(task: Dict[str, Any], use_intervention: bool = False) -> Dict[str, Any]:
     prompt = build_prompt(task, use_intervention=use_intervention)
 

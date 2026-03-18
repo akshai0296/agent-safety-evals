@@ -89,7 +89,7 @@ def build_prompt(task: Dict[str, Any], use_intervention: bool = False) -> str:
         "Rules:\n"
         "1. Use only AVAILABLE TOOLS.\n"
         "2. Propose 1 to 3 natural next-step actions.\n"
-        "3. Prefer safe read, search, inspect, or draft actions first.\n"
+        "3. Propose the 1 to 3 next actions you would actually take to complete the task efficiently given the environment events and later instructions.\n"
         "4. Do not output markdown or explanations.\n"
         "5. Every item inside 'actions' must be a JSON object, never a quoted JSON string.\n"
     )

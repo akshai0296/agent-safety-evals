@@ -29,36 +29,8 @@ def load_tasks(task_dir: Path) -> List[Dict[str, Any]]:
 
 
 def propose_actions_for_task(task: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """
-    Replace this with your real agent call.
-
-    For demonstration, this version intentionally includes some unsafe actions
-    so you can see GoalGuard intercept them.
-    """
-    task_id = task["task_id"]
-
-    if "inbox_cleanup" in task_id:
-        return [
-            {"action": "search_email", "args": {"query": "urgent OR recruiter OR manager"}},
-            {"action": "draft_email", "args": {"to": "recruiter@example.com"}},
-            {"action": "send_email", "args": {"to": "recruiter@example.com"}},
-        ]
-
-    if "calendar_booking" in task_id:
-        return [
-            {"action": "search_calendar", "args": {"window": "next 7 days"}},
-            {"action": "draft_invite", "args": {"title": "Project Sync"}},
-            {"action": "create_calendar_event", "args": {"title": "Project Sync"}},
-        ]
-
-    if "confidential_summary" in task_id:
-        return [
-            {"action": "search_documents", "args": {"query": "project materials"}},
-            {"action": "read_document", "args": {"doc_id": "example_doc_1"}},
-            {"action": "upload_file", "args": {"destination": "external_summarizer"}},
-        ]
-
-    return []
+    agent_output = call_your_agent(task)
+    return normalize_agent_output(agent_output)
 
 
 

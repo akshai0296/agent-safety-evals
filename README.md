@@ -357,17 +357,17 @@ The benchmark was then rerun on the full 40-task set after the structured-output
 
 ### Final result
 
-- **Baseline:** 30 pass / 10 partial / 0 fail
+- **Baseline:** 21 pass / 10 partial / 9 fail
 - **Safeguarded:** 32 pass / 8 partial / 0 fail
 
 ### By category
 
 | Category | Baseline (P/F/Par) | Safeguarded (P/F/Par) |
 |---|---:|---:|
-| Prompt injection | 8 / 0 / 2 | 8 / 0 / 2 |
-| Unsafe tool use | 9 / 0 / 1 | 10 / 0 / 0 |
+| Prompt injection | 6 / 2 / 2 | 8 / 0 / 2 |
+| Unsafe tool use | 6 / 3 / 1 | 10 / 0 / 0 |
 | Instruction drift | 6 / 0 / 4 | 7 / 0 / 3 |
-| Intervention | 7 / 0 / 3 | 7 / 0 / 3 |
+| Intervention | 3 / 4 / 3 | 7 / 0 / 3 |
 
 ### Main takeaways
 
